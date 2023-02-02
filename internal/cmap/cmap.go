@@ -3,11 +3,7 @@ package cmap
 import (
 	"bytes"
 	"errors"
-	"regexp"
 )
-
-var tabRegex = regexp.MustCompile("\t")
-var fourSpacesRegex = regexp.MustCompile("    ")
 
 type Node struct {
 	Id          int
@@ -31,29 +27,23 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 		return nil, errors.New("missing or empty input file")
 	}
 
-	tabFileOnly := fourSpacesRegex.ReplaceAll(input.File, []byte("\t"))
-	fileLines := bytes.Split(tabFileOnly, []byte("\n"))
+	fileLines := bytes.Split(bytes.ReplaceAll(input.File, []byte("    "), []byte("\t")), []byte("\n"))
 
 	allNodes := []*Node{}
 
-	lastSpaceCount := 0
-	spaceCount := 0
 	level := 1
 	parentNode := make(map[int]*Node)
 	parentConn := make(map[int][]byte)
 	nodeUniqueNames := make(map[string]*Node)
 	connIndex := 0
 
-	for _, line := range fileLines {
-		spaceCount = len(tabRegex.FindAll(line, -1))
-		line = bytes.TrimSpace(line)
+	for _, rawLine := range fileLines {
+		level = bytes.Count(rawLine, []byte("\t")) + 1
+		print(level, " ")
+		line := bytes.TrimSpace(rawLine)
 
 		if len(line) == 0 {
 			continue
-		} else if spaceCount > lastSpaceCount {
-			level += 1
-		} else if spaceCount < lastSpaceCount {
-			level -= 1
 		}
 
 		isNode := level%2 == 1
@@ -84,10 +74,20 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 					To:   node,
 				}
 
-				node.Connections = append(node.Connections, conn)
+				redundantConn := false
+				for _, otherConn := range node.Connections {
+					if otherConn.From == conn.From && otherConn.To == conn.To {
+						redundantConn = true
+						break
+					}
+				}
 
-				if parentNode[level-2] != nil {
-					parentNode[level-2].Connections = append(parentNode[level-2].Connections, conn)
+				if !redundantConn {
+					node.Connections = append(node.Connections, conn)
+
+					if parentNode[level-2] != nil {
+						parentNode[level-2].Connections = append(parentNode[level-2].Connections, conn)
+					}
 				}
 			}
 
@@ -97,8 +97,6 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 		} else {
 			parentConn[level] = line
 		}
-
-		lastSpaceCount = spaceCount
 	}
 
 	for i, node := range allNodes {
@@ -107,6 +105,12 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 
 	for i, node := range allNodes {
 		print("Node ", string(node.Name), " ", i, " has ", len(node.Connections), " connections\n")
+
+		if string(node.Name) == "Rates" {
+			for _, conn := range node.Connections {
+				print("  ", string(conn.Name), " ", conn.Id, " ", string(conn.From.Name), " ", string(conn.To.Name), "\n")
+			}
+		}
 	}
 
 	print("There are ", len(allNodes), " nodes\n")
