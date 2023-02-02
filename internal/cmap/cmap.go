@@ -35,6 +35,7 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 	parentNode := make(map[int]*Node)
 	parentConn := make(map[int][]byte)
 	nodeUniqueNames := make(map[string]*Node)
+	nodeIndex := 0
 	connIndex := 0
 
 	for _, rawLine := range fileLines {
@@ -60,6 +61,8 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 				redundantNode = true
 			} else {
 				nodeUniqueNames[string(line)] = node
+				node.Id = nodeIndex
+				nodeIndex += 1
 			}
 
 			parentNode[level] = node
@@ -76,7 +79,7 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 
 				redundantConn := false
 				for _, otherConn := range node.Connections {
-					if otherConn.From == conn.From && otherConn.To == conn.To {
+					if otherConn.From == conn.From && otherConn.To == conn.To && bytes.Equal(otherConn.Name, conn.Name) {
 						redundantConn = true
 						break
 					}
@@ -100,10 +103,6 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 	}
 
 	for i, node := range allNodes {
-		node.Id = i
-	}
-
-	for i, node := range allNodes {
 		print("Node ", string(node.Name), " ", i, " has ", len(node.Connections), " connections\n")
 
 		if string(node.Name) == "Rates" {
@@ -113,9 +112,70 @@ func CreateSet(input *CmapInput) ([]byte, error) {
 		}
 	}
 
-	print("There are ", len(allNodes), " nodes\n")
+	nodeCount := len(allNodes)
+	connCount := 0
+	for _, node := range allNodes {
+		connCount += len(node.Connections)
+	}
+	connCount /= 2
+
+	// Find longest path
+	longestPath := []*Node{}
+	startNodes := []*Node{}
+
+	for _, node := range allNodes {
+		startsChain := true
+
+		for _, conn := range node.Connections {
+			if conn.To == node {
+				startsChain = false
+			}
+		}
+
+		if startsChain {
+			startNodes = append(startNodes, node)
+		}
+	}
+
+	for _, node := range startNodes {
+		nodePath := traverse([]*Node{node})
+		if len(nodePath) > len(longestPath) {
+			longestPath = nodePath
+		}
+	}
+
+	for _, node := range startNodes {
+		print("Starting node: ", string(node.Name), "\n")
+	}
+
+	print("There are ", nodeCount, " nodes\n")
+	print("There are ", connCount, " connections\n")
+
+	print("Longest path is ", len(longestPath), " nodes long\n")
+	for _, node := range longestPath {
+		print("  ", string(node.Name), "\n")
+	}
 
 	output := []byte("word,count\n")
 
 	return output, nil
+}
+
+func traverse(path []*Node) []*Node {
+	node := path[len(path)-1]
+
+	options := [][]*Node{}
+	for _, conn := range node.Connections {
+		if conn.From == node {
+			options = append(options, traverse(append(path, conn.To)))
+		}
+	}
+
+	for _, option := range options {
+		if len(option) > len(path) {
+			path = option
+		}
+	}
+
+	return path
 }
