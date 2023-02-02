@@ -40,7 +40,7 @@ func main() {
 
 		rawInput := args[0].String()
 
-		input := &cmap.cmapInput{}
+		input := &cmap.CmapInput{}
 		err := json.Unmarshal([]byte(rawInput), input)
 		if err != nil {
 			return sendError("Unable to decode input")
