@@ -33,7 +33,7 @@ func sendError(text string) string {
 }
 
 func main() {
-	js.Global().Set("createcmap", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	js.Global().Set("gradecmap", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if len(args) != 1 {
 			return sendError("Invalid number of arguments")
 		}
@@ -46,7 +46,7 @@ func main() {
 			return sendError("Unable to decode input")
 		}
 
-		cmap, err := cmap.CreateSet(input)
+		cmap, err := cmap.GradeMap(input)
 		if err != nil {
 			return sendError(err.Error())
 		}

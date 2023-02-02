@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/russellsteadman/cmap/internal/cmap"
 )
@@ -15,7 +16,7 @@ const version = "v0.1.0"
 
 func printHelp() {
 	fmt.Printf("Usage: cmap %s\n", version)
-	fmt.Print("cmap is a tool for generating a cmapulary file from a text file.\n\n")
+	fmt.Print("cmap is a tool for grading concept maps from a Cmap Outline file.\n\n")
 
 	fmt.Println("Options:")
 	fmt.Println("  -h, --help\t\t\tShow this help message and exit")
@@ -74,12 +75,15 @@ func main() {
 
 	cmapInput.File = fileBytes
 
-	cmapOutput, err := cmap.CreateSet(cmapInput)
+	cmapOutput, err := cmap.GradeMap(cmapInput)
 	if err != nil {
 		fmt.Print(err.Error() + "\n\n")
 		printHelp()
 		return
 	}
 
-	fmt.Print(string(cmapOutput))
+	fmt.Print("Nodes: " + fmt.Sprint(cmapOutput.Nodes) + "\n")
+	fmt.Print("Connections: " + fmt.Sprint(cmapOutput.Connections) + "\n")
+	fmt.Print("Highest Hierarchy Length: " + fmt.Sprint(cmapOutput.LongestPathLength) + "\n")
+	fmt.Print("Highest Hierarchy: \n\n" + strings.Join(cmapOutput.LongestPath, " > ") + "\n\n")
 }
