@@ -7,13 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"strconv"
 
 	"github.com/russellsteadman/cmap/internal/cmap"
 )
 
-const version = "v0.2.0"
+const version = "v0.1.0"
 
 func printHelp() {
 	fmt.Printf("Usage: cmap %s\n", version)
@@ -22,12 +20,7 @@ func printHelp() {
 	fmt.Println("Options:")
 	fmt.Println("  -h, --help\t\t\tShow this help message and exit")
 	fmt.Println("  -v, --version\t\t\tShow the version number and exit")
-	fmt.Println("  -o, --output\t\t\tThe output file to write to (required)")
 	fmt.Println("  -i, --input\t\t\tThe input file to read from (required)")
-	fmt.Println("  -t, --thresh\t\t\tThe minimum word count to include in the output")
-	fmt.Println("  -c, --count\t\t\tThe maximum number of words to include in the output")
-	fmt.Println("  -s, --simple\t\t\tOnly emit the words, not the counts")
-	fmt.Println("  -g, --group\t\t\tGroup words into # word groups")
 }
 
 func main() {
@@ -43,7 +36,6 @@ func main() {
 
 	cmapInput := &cmap.CmapInput{}
 	inputFile := ""
-	outputFile := ""
 
 	for i, arg := range args {
 		if arg == "-h" || arg == "--help" {
@@ -52,58 +44,15 @@ func main() {
 		} else if arg == "-v" || arg == "--version" {
 			fmt.Printf("cmap version %s\n", version)
 			return
-		} else if arg == "-o" || arg == "--output" {
-			if i+1 < len(args) {
-				outputFile = args[i+1]
-			}
 		} else if arg == "-i" || arg == "--input" {
 			if i+1 < len(args) {
 				inputFile = args[i+1]
 			}
-		} else if arg == "-t" || arg == "--thresh" {
-			if i+1 < len(args) {
-				thresh, err := strconv.Atoi(args[i+1])
-				if err != nil {
-					fmt.Print("Missing threshold number (e.g. 2)\n\n")
-					printHelp()
-					return
-				}
-
-				cmapInput.Threshold = thresh
-			}
-		} else if arg == "-c" || arg == "--count" {
-			if i+1 < len(args) {
-				count, err := strconv.Atoi(args[i+1])
-				if err != nil {
-					fmt.Print("Missing word count number (e.g. 2)\n\n")
-					printHelp()
-					return
-				}
-
-				cmapInput.Count = count
-			}
-		} else if arg == "-s" || arg == "--simple" {
-			cmapInput.Simple = true
-		} else if arg == "-g" || arg == "--group" {
-			if i+1 < len(args) {
-				group, err := strconv.Atoi(args[i+1])
-				if err != nil {
-					fmt.Print("Missing group number (e.g. 2)\n\n")
-					printHelp()
-					return
-				}
-
-				cmapInput.Group = group
-			}
 		}
 	}
 
-	if (inputFile == "") || (outputFile == "") {
+	if inputFile == "" {
 		fmt.Print("Missing input or output file\n\n")
-		printHelp()
-		return
-	} else if inputFile == outputFile {
-		fmt.Print("Input and output files cannot be the same\n\n")
 		printHelp()
 		return
 	}
@@ -132,18 +81,5 @@ func main() {
 		return
 	}
 
-	file, err = os.Create(outputFile)
-	if err != nil {
-		fmt.Printf("Error opening output file: %s\n\n", outputFile)
-		printHelp()
-		return
-	}
-
-	file.Write(cmapOutput)
-	file.Close()
-
-	fmt.Println("Success!")
-	fmt.Print("Open the file in your editor to see the results:\n\n")
-	abs, _ := filepath.Abs(outputFile)
-	fmt.Print(abs + "\n\n")
+	fmt.Print(string(cmapOutput))
 }

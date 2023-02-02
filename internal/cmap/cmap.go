@@ -3,95 +3,115 @@ package cmap
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"regexp"
-	"sort"
 )
 
-var wordRegex = regexp.MustCompile("(?i)[^-'0-9a-zÀ-ÿ`]")
-var sepRegex = regexp.MustCompile("[\n\r\t—]")
+var tabRegex = regexp.MustCompile("\t")
+var fourSpacesRegex = regexp.MustCompile("    ")
 
-type Word struct {
-	Name  []byte
-	Count int
+type Node struct {
+	Id          int
+	Name        []byte
+	Connections []*Connections
+}
+
+type Connections struct {
+	Id   int
+	Name []byte
+	From *Node
+	To   *Node
 }
 
 type CmapInput struct {
-	File      []byte `json:"file"`
-	Threshold int    `json:"threshold"`
-	Count     int    `json:"count"`
-	Simple    bool   `json:"simple"`
-	Group     int    `json:"group"`
+	File []byte `json:"file"`
 }
 
 func CreateSet(input *CmapInput) ([]byte, error) {
 	if input.File == nil || len(input.File) == 0 {
 		return nil, errors.New("missing or empty input file")
-	} else if input.Threshold > 0 && input.Count > 0 {
-		return nil, errors.New("cannot use both threshold and count")
 	}
 
-	fileReformatted := sepRegex.ReplaceAll(input.File, []byte(" "))
-	fileWords := bytes.Split(fileReformatted, []byte(" "))
-	fileWordsFormatted := make([][]byte, 0, len(fileWords))
+	tabFileOnly := fourSpacesRegex.ReplaceAll(input.File, []byte("\t"))
+	fileLines := bytes.Split(tabFileOnly, []byte("\n"))
 
-	for _, word := range fileWords {
-		word = wordRegex.ReplaceAll(word, []byte{})
-		word = bytes.ToLower(word)
-		if len(word) > 0 {
-			fileWordsFormatted = append(fileWordsFormatted, word)
+	allNodes := []*Node{}
+
+	lastSpaceCount := 0
+	spaceCount := 0
+	level := 1
+	parentNode := make(map[int]*Node)
+	parentConn := make(map[int][]byte)
+	nodeUniqueNames := make(map[string]*Node)
+	connIndex := 0
+
+	for _, line := range fileLines {
+		spaceCount = len(tabRegex.FindAll(line, -1))
+		line = bytes.TrimSpace(line)
+
+		if len(line) == 0 {
+			continue
+		} else if spaceCount > lastSpaceCount {
+			level += 1
+		} else if spaceCount < lastSpaceCount {
+			level -= 1
 		}
-	}
 
-	if input.Group > 1 {
-		for i := 0; i <= len(fileWordsFormatted)-input.Group; i++ {
-			fileWordsFormatted[i] = bytes.Join(fileWordsFormatted[i:i+input.Group], []byte(" "))
-		}
-		fileWordsFormatted = fileWordsFormatted[:len(fileWordsFormatted)-input.Group+1]
-	}
+		isNode := level%2 == 1
 
-	wordCount := make(map[string]int, len(fileWordsFormatted))
-
-	for _, word := range fileWordsFormatted {
-		if _, ok := wordCount[string(word)]; !ok {
-			wordCount[string(word)] = 1
-		} else {
-			wordCount[string(word)]++
-		}
-	}
-
-	words := make([]Word, 0, len(wordCount))
-
-	for word, count := range wordCount {
-		words = append(words, Word{[]byte(word), count})
-	}
-
-	sort.Slice(words, func(i int, j int) bool {
-		return words[i].Count > words[j].Count
-	})
-
-	max := len(words)
-	if input.Count > 0 {
-		max = input.Count
-	}
-
-	thresh := 0
-	if input.Threshold > 0 {
-		thresh = input.Threshold
-	}
-
-	output := []byte{}
-
-	for i := 0; i < max; i++ {
-		if words[i].Count >= thresh {
-			if input.Simple {
-				output = append(output, words[i].Name...)
-				output = append(output, []byte("\n")...)
-			} else {
-				output = append(output, []byte(fmt.Sprintf("#%-5d - %5d\t%s\n", i+1, words[i].Count, words[i].Name))...)
+		if isNode {
+			redundantNode := false
+			node := &Node{
+				Name:        line,
+				Connections: []*Connections{},
 			}
+
+			if _, ok := nodeUniqueNames[string(line)]; ok {
+				node = nodeUniqueNames[string(line)]
+				redundantNode = true
+			} else {
+				nodeUniqueNames[string(line)] = node
+			}
+
+			parentNode[level] = node
+
+			if level > 1 {
+				// Must create two connections, one for each direction
+				connIndex += 1
+				conn := &Connections{
+					Id:   connIndex,
+					Name: []byte(parentConn[level-1]),
+					From: parentNode[level-2],
+					To:   node,
+				}
+
+				node.Connections = append(node.Connections, conn)
+
+				if parentNode[level-2] != nil {
+					parentNode[level-2].Connections = append(parentNode[level-2].Connections, conn)
+				}
+			}
+
+			if !redundantNode {
+				allNodes = append(allNodes, node)
+			}
+		} else {
+			parentConn[level] = line
 		}
+
+		lastSpaceCount = spaceCount
 	}
+
+	for i, node := range allNodes {
+		node.Id = i
+	}
+
+	for i, node := range allNodes {
+		print("Node ", string(node.Name), " ", i, " has ", len(node.Connections), " connections\n")
+	}
+
+	print("There are ", len(allNodes), " nodes\n")
+
+	output := []byte("word,count\n")
 
 	return output, nil
 }
