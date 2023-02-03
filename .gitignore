@@ -1,3 +1,4 @@
 *.txt
+*.wasm
 .DS_store
 examples/
