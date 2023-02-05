@@ -1,4 +1,4 @@
-name: release
+name: pages
 
 on:
   push:
