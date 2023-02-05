@@ -1,0 +1,46 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  goreleaser:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.19"
+          check-latest: true
+
+      - name: Build go wasm file
+        run: go build -o web/public/cmap.wasm
+        env:
+          GOOS: js
+          GOARCH: wasm
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Build next.js app
+        run: npm run build
+        working-directory: web
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: web/out
