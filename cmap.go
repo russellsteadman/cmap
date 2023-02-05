@@ -22,6 +22,7 @@ func printHelp() {
 	fmt.Println("  -h, --help\t\t\tShow this help message and exit")
 	fmt.Println("  -v, --version\t\t\tShow the version number and exit")
 	fmt.Println("  -i, --input\t\t\tThe input file to read from (required)")
+	fmt.Println("  -f, --format\t\t\tThe format of the input file (txt, xml)")
 }
 
 func main() {
@@ -48,6 +49,12 @@ func main() {
 		} else if arg == "-i" || arg == "--input" {
 			if i+1 < len(args) {
 				inputFile = args[i+1]
+			}
+		} else if arg == "-f" || arg == "--format" {
+			if i+1 < len(args) {
+				if args[i+1] == "xml" {
+					cmapInput.Format = 1
+				}
 			}
 		}
 	}
