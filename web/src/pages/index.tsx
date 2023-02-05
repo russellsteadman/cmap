@@ -92,26 +92,43 @@ export default function Home() {
         <title>Concept Map Grader</title>
         <meta name="description" content="Concept map grading tool" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="container py-3">
         <h1>Concept Map Grader</h1>
+
+        <p>
+          You can use either the CmapTools desktop app or the CmapCloud web app
+          to check your score. For desktop app users, select{" "}
+          <b>Export &gt; Cmap Outline</b>. For web app users, select{" "}
+          <b>Export to CXL</b> on the left-hand side. Alternatively, web app
+          users can click <b>Open in Cmap Viewer</b> and provide the url without
+          downloading anything.
+        </p>
+
         <form onSubmit={onSubmit}>
-          <p>
-            Select a Concept Map Outline file. In CmapTools, this is available
-            under <b>Exports &rsaquo; Cmap Outline</b>.
-          </p>
+          <label htmlFor="file">
+            <code>.cxl</code> file or Concept Map Outline <code>.txt</code> file
+          </label>
           <input
             type="file"
             accept=".txt,.cxl,.xml"
             className="form-control mb-3"
             ref={fileInput}
+            id="file"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                setUrl("");
+              }
+            }}
           />
 
+          <label htmlFor="url">CmapCloud Concept Map URL</label>
           <input
             type="url"
             className="form-control mb-3"
             value={url}
+            placeholder="https://cmapscloud.ihmc.us/..."
+            id="url"
             onChange={(e) => {
               setUrl(e.target.value);
               if (fileInput.current) fileInput.current.value = "";
@@ -125,6 +142,9 @@ export default function Home() {
 
         {!error && !!nodes && (
           <>
+            <hr />
+
+            <h3>Results</h3>
             <div className="input-group mt-3">
               <span className="input-group-text">Node Count</span>
               <input
@@ -155,7 +175,7 @@ export default function Home() {
               />
             </div>
 
-            <h3 className="mt-3">Highest Hierarchy</h3>
+            <h4 className="mt-3">Highest Hierarchy</h4>
             <textarea
               className="form-control"
               readOnly
@@ -170,6 +190,38 @@ export default function Home() {
             {error}
           </div>
         )}
+
+        <p className="text-muted small mt-3">
+          Privacy Notice: Your concept map information does <b>not</b> leave
+          your device. Clicking <i>Grade Concept Map</i> will not submit your
+          concept map for grading. If you use the CmapCloud URL option, the
+          concept map is downloaded to your device and then graded.
+        </p>
+
+        <p className="text-muted small mt-3">
+          Please submit{" "}
+          <a
+            href="https://github.com/russellsteadman/cmap/issues/new"
+            target="_blank"
+            rel="noreferrer"
+          >
+            bugs and accessibility issues
+          </a>{" "}
+          if you find any. This requires a GitHub account, which is free and
+          easy to set up.
+        </p>
+
+        <p className="text-muted small">
+          Copyright &copy; 2023 The Ohio State University. See{" "}
+          <a
+            href="https://github.com/russellsteadman/cmap/blob/main/LICENSE"
+            target="_blank"
+            rel="noreferrer"
+          >
+            LICENSE
+          </a>{" "}
+          file.
+        </p>
       </main>
     </>
   );

@@ -45,8 +45,9 @@ Options:
   -h, --help                    Show this help message and exit
   -v, --version                 Show the version number and exit
   -i, --input                   The input file to read from (required)
+  -f, --format                  The format of the input file (txt, xml)
 ```
 
 ## License
 
-Open source. Released under an MIT License, see the `LICENSE` file for details.
+Copyright 2023 The Ohio State University. Released under an MIT License, see the `LICENSE` file for details.
