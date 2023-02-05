@@ -38,7 +38,7 @@ cmap --help
 ```
 
 ```txt
-Usage: cmap v0.1.0
+Usage: cmap v0.2.0
 cmap is a tool for grading concept maps from a Cmap Outline file.
 
 Options:
