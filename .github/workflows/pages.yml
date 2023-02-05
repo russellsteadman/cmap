@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  goreleaser:
+  pages:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
@@ -39,6 +39,8 @@ jobs:
       - name: Build next.js app
         run: npm run build
         working-directory: web
+        env:
+          NODE_ENV: production
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
