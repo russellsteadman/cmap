@@ -93,6 +93,7 @@ func main() {
 	fmt.Print("NL: " + fmt.Sprint(cmapOutput.NL) + "\n")
 	fmt.Print("NH: " + fmt.Sprint(cmapOutput.NH) + "\n")
 	fmt.Print("HH: " + fmt.Sprint(cmapOutput.HH) + "\n")
+	fmt.Print("NCL: " + fmt.Sprint(cmapOutput.NCL) + "\n")
 
 	fmt.Print("Highest Hierarchy: \n\n" + strings.Join(cmapOutput.LongestPath, " > ") + "\n\n")
 }
