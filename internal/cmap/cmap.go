@@ -229,7 +229,7 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 					connCol := &xmlConnectionCollapsed{}
 					connCol.From = parent
 					connCol.To = connection.To
-					connCol.Label = []byte(html.UnescapeString(linkingPhraseIdMap[connection.From]))
+					connCol.Label = bytes.ReplaceAll([]byte(html.UnescapeString(linkingPhraseIdMap[connection.From])), []byte("\n"), []byte(" "))
 					connCollapsed = append(connCollapsed, connCol)
 				}
 			}
@@ -316,6 +316,18 @@ func traverse(path []*Node) []*Node {
 	options := [][]*Node{}
 	for _, conn := range node.Connections {
 		if conn.From == node {
+			isAlreadyInPath := false
+			for _, nodeInPath := range path {
+				if nodeInPath == conn.To {
+					isAlreadyInPath = true
+					break
+				}
+			}
+
+			if isAlreadyInPath {
+				continue
+			}
+
 			options = append(options, traverse(append(path, conn.To)))
 		}
 	}
