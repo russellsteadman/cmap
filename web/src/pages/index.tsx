@@ -1,14 +1,19 @@
 import Head from "next/head";
 import { FormEventHandler, useRef, useState } from "react";
 
+type CmapOutput = {
+  nc: number;
+  nl: number;
+  nh: number;
+  hh: number;
+  longestPath: string[];
+};
+
 export default function Home() {
   const [error, setError] = useState("");
   const [url, setUrl] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
-  const [nodes, setNodes] = useState(0);
-  const [conns, setConns] = useState(0);
-  const [depth, setDepth] = useState(0);
-  const [highestHierarchy, setHighestHierarchy] = useState("");
+  const [out, setOut] = useState<CmapOutput | undefined>();
 
   const execute = (input: { file: string; format?: number }) => {
     const rawInput = JSON.stringify(input);
@@ -19,21 +24,7 @@ export default function Home() {
       setError(cmap.message);
     } else {
       setError("");
-
-      setNodes(cmap.data.nodes);
-      setConns(cmap.data.connections);
-      setDepth(cmap.data.longestPathLength);
-      setHighestHierarchy(
-        (cmap.data.longestPath as string[]).reduce((a, b, c, d) => {
-          if (c === 0) return b;
-
-          if (c % 2 === 1) {
-            return a + "\n\t(" + b + ")";
-          }
-
-          return a + " " + b;
-        }, "")
-      );
+      setOut(cmap.data);
     }
   };
 
@@ -140,7 +131,7 @@ export default function Home() {
           </button>
         </form>
 
-        {!error && !!nodes && (
+        {!error && !!out && (
           <>
             <hr />
 
@@ -151,7 +142,7 @@ export default function Home() {
                 type="text"
                 className="form-control"
                 readOnly
-                value={nodes}
+                value={out.nc}
               />
             </div>
 
@@ -161,7 +152,7 @@ export default function Home() {
                 type="text"
                 className="form-control"
                 readOnly
-                value={conns}
+                value={out.nl}
               />
             </div>
 
@@ -171,7 +162,7 @@ export default function Home() {
                 type="text"
                 className="form-control"
                 readOnly
-                value={depth}
+                value={out.hh}
               />
             </div>
 
@@ -180,7 +171,15 @@ export default function Home() {
               className="form-control"
               readOnly
               style={{ minHeight: 200 }}
-              value={highestHierarchy}
+              value={out.longestPath.reduce((a, b, c, d) => {
+                if (c === 0) return b;
+
+                if (c % 2 === 1) {
+                  return a + "\n\t(" + b + ")";
+                }
+
+                return a + " " + b;
+              }, "")}
             ></textarea>
           </>
         )}

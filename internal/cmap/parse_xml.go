@@ -5,6 +5,60 @@ import (
 	"html"
 )
 
+type xmlConnection struct {
+	XMLName xml.Name `xml:"connection"`
+	Id      string   `xml:"id,attr"`
+	From    string   `xml:"from-id,attr"`
+	To      string   `xml:"to-id,attr"`
+}
+
+type xmlConnectionCollapsed struct {
+	From  string
+	To    string
+	Label []byte
+}
+
+type xmlConnectionList struct {
+	XMLName     xml.Name        `xml:"connection-list"`
+	Connections []xmlConnection `xml:"connection"`
+}
+
+type xmlLinkingPhrase struct {
+	XMLName  xml.Name `xml:"linking-phrase"`
+	Id       string   `xml:"id,attr"`
+	Label    string   `xml:"label,attr"`
+	ParentId string   `xml:"parent-id,attr"`
+}
+
+type xmlLinkingPhraseList struct {
+	XMLName        xml.Name           `xml:"linking-phrase-list"`
+	LinkingPhrases []xmlLinkingPhrase `xml:"linking-phrase"`
+}
+
+type xmlConcept struct {
+	XMLName  xml.Name `xml:"concept"`
+	Id       string   `xml:"id,attr"`
+	Label    string   `xml:"label,attr"`
+	ParentId string   `xml:"parent-id,attr"`
+}
+
+type xmlConceptList struct {
+	XMLName  xml.Name     `xml:"concept-list"`
+	Concepts []xmlConcept `xml:"concept"`
+}
+
+type xmlMap struct {
+	XMLName           xml.Name             `xml:"map"`
+	ConceptList       xmlConceptList       `xml:"concept-list"`
+	LinkingPhraseList xmlLinkingPhraseList `xml:"linking-phrase-list"`
+	ConnectionList    xmlConnectionList    `xml:"connection-list"`
+}
+
+type xmlCmap struct {
+	XMLName xml.Name `xml:"cmap"`
+	Map     xmlMap   `xml:"map"`
+}
+
 func parseXML(fileText []byte) (nodeList []*Node, err error) {
 	// XML format
 	xmlFormat := &xmlCmap{}

@@ -1,9 +1,7 @@
 package cmap
 
 import (
-	"encoding/xml"
 	"errors"
-	"log"
 )
 
 // Node is a node in the cmap
@@ -29,64 +27,11 @@ type CmapInput struct {
 
 // CmapOutput is the output of the GradeMap function
 type CmapOutput struct {
-	Nodes             int      `json:"nodes"`
-	Connections       int      `json:"connections"`
-	LongestPathLength int      `json:"longestPathLength"`
-	LongestPath       []string `json:"longestPath"`
-}
-
-type xmlConnection struct {
-	XMLName xml.Name `xml:"connection"`
-	Id      string   `xml:"id,attr"`
-	From    string   `xml:"from-id,attr"`
-	To      string   `xml:"to-id,attr"`
-}
-
-type xmlConnectionCollapsed struct {
-	From  string
-	To    string
-	Label []byte
-}
-
-type xmlConnectionList struct {
-	XMLName     xml.Name        `xml:"connection-list"`
-	Connections []xmlConnection `xml:"connection"`
-}
-
-type xmlLinkingPhrase struct {
-	XMLName  xml.Name `xml:"linking-phrase"`
-	Id       string   `xml:"id,attr"`
-	Label    string   `xml:"label,attr"`
-	ParentId string   `xml:"parent-id,attr"`
-}
-
-type xmlLinkingPhraseList struct {
-	XMLName        xml.Name           `xml:"linking-phrase-list"`
-	LinkingPhrases []xmlLinkingPhrase `xml:"linking-phrase"`
-}
-
-type xmlConcept struct {
-	XMLName  xml.Name `xml:"concept"`
-	Id       string   `xml:"id,attr"`
-	Label    string   `xml:"label,attr"`
-	ParentId string   `xml:"parent-id,attr"`
-}
-
-type xmlConceptList struct {
-	XMLName  xml.Name     `xml:"concept-list"`
-	Concepts []xmlConcept `xml:"concept"`
-}
-
-type xmlMap struct {
-	XMLName           xml.Name             `xml:"map"`
-	ConceptList       xmlConceptList       `xml:"concept-list"`
-	LinkingPhraseList xmlLinkingPhraseList `xml:"linking-phrase-list"`
-	ConnectionList    xmlConnectionList    `xml:"connection-list"`
-}
-
-type xmlCmap struct {
-	XMLName xml.Name `xml:"cmap"`
-	Map     xmlMap   `xml:"map"`
+	NC          int      `json:"nc"`          // Number of concepts
+	NL          int      `json:"nl"`          // Number of links
+	HH          int      `json:"hh"`          // Highest hierarchy
+	NH          int      `json:"nh"`          // Number of hierarchies
+	LongestPath []string `json:"longestPath"` // Highest hierarchy path
 }
 
 func GradeMap(input *CmapInput) (*CmapOutput, error) {
@@ -122,6 +67,7 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 
 	// Find longest path
 	longestPath := []*Node{}
+	numberOfHierarchies := 0
 
 	// Find all nodes that start a chain and traverse them
 	for _, node := range allNodes {
@@ -134,11 +80,8 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 		}
 
 		if startsChain {
-			nodePath, ends := traverse([]*Node{node})
-			if len(nodePath) > len(longestPath) {
-				longestPath = nodePath
-			}
-			log.Println("Ends: ", ends)
+			longestPath, numberOfHierarchies = traverse([]*Node{node})
+			break
 		}
 	}
 
@@ -161,10 +104,11 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 	}
 
 	output := &CmapOutput{
-		Connections:       connCount,
-		Nodes:             nodeCount,
-		LongestPathLength: len(longestPath),
-		LongestPath:       longestPathFormatted,
+		NC:          nodeCount,
+		NL:          connCount,
+		HH:          len(longestPath),
+		NH:          numberOfHierarchies,
+		LongestPath: longestPathFormatted,
 	}
 
 	return output, nil

@@ -89,8 +89,10 @@ func main() {
 		return
 	}
 
-	fmt.Print("Nodes: " + fmt.Sprint(cmapOutput.Nodes) + "\n")
-	fmt.Print("Connections: " + fmt.Sprint(cmapOutput.Connections) + "\n")
-	fmt.Print("Highest Hierarchy Length: " + fmt.Sprint(cmapOutput.LongestPathLength) + "\n")
+	fmt.Print("NC: " + fmt.Sprint(cmapOutput.NC) + "\n")
+	fmt.Print("NL: " + fmt.Sprint(cmapOutput.NL) + "\n")
+	fmt.Print("NH: " + fmt.Sprint(cmapOutput.NH) + "\n")
+	fmt.Print("HH: " + fmt.Sprint(cmapOutput.HH) + "\n")
+
 	fmt.Print("Highest Hierarchy: \n\n" + strings.Join(cmapOutput.LongestPath, " > ") + "\n\n")
 }
