@@ -1,10 +1,9 @@
 package cmap
 
 import (
-	"bytes"
 	"encoding/xml"
 	"errors"
-	"html"
+	"log"
 )
 
 // Node is a node in the cmap
@@ -97,160 +96,20 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 	}
 
 	// Create a list of all nodes
-	allNodes := []*Node{}
+	var allNodes []*Node
+	var err error
 
 	// Text format
 	if input.Format == 0 {
-		// Split file into lines
-		fileLines := bytes.Split(bytes.ReplaceAll(input.File, []byte("    "), []byte("\t")), []byte("\n"))
-
-		// Initialize loop variables
-		level := 1
-		parentNode := make(map[int]*Node)
-		parentConn := make(map[int][]byte)
-		nodeUniqueNames := make(map[string]*Node)
-		nodeIndex := 0
-		connIndex := 0
-
-		for _, rawLine := range fileLines {
-			// Get the level of the line
-			level = bytes.Count(rawLine, []byte("\t")) + 1
-			line := bytes.TrimSpace(rawLine)
-
-			// Skip empty lines
-			if len(line) == 0 {
-				continue
-			}
-
-			// Check if the line is a node or a connection
-			isNode := level%2 == 1
-
-			if isNode {
-				// Create a new node
-				redundantNode := false
-				node := &Node{
-					Name:        line,
-					Connections: []*Connections{},
-				}
-
-				// Check if the node already exists
-				if _, ok := nodeUniqueNames[string(line)]; ok {
-					node = nodeUniqueNames[string(line)]
-					redundantNode = true
-				} else {
-					nodeUniqueNames[string(line)] = node
-					node.Id = nodeIndex
-					nodeIndex += 1
-				}
-
-				// Set the parent node for future connections
-				parentNode[level] = node
-
-				if level > 1 {
-					// Create a connection between the parent node and the current node
-					connIndex += 1
-					conn := &Connections{
-						Id:   connIndex,
-						Name: []byte(parentConn[level-1]),
-						From: parentNode[level-2],
-						To:   node,
-					}
-
-					// Check if the connection already exists
-					redundantConn := false
-					for _, otherConn := range node.Connections {
-						if otherConn.From == conn.From && otherConn.To == conn.To && bytes.Equal(otherConn.Name, conn.Name) {
-							redundantConn = true
-							break
-						}
-					}
-
-					if !redundantConn {
-						// Add the connection to the current node and the parent node
-						node.Connections = append(node.Connections, conn)
-
-						if parentNode[level-2] != nil {
-							parentNode[level-2].Connections = append(parentNode[level-2].Connections, conn)
-						}
-					}
-				}
-
-				if !redundantNode {
-					// Add the node to the list of all nodes
-					allNodes = append(allNodes, node)
-				}
-			} else {
-				// Set the parent connection for future connections
-				parentConn[level] = line
-			}
-		}
+		allNodes, err = parseText(input.File)
 	} else if input.Format == 1 {
-		// XML format
-		xmlFormat := &xmlCmap{}
-		err := xml.Unmarshal(input.File, &xmlFormat)
-		if err != nil {
-			return nil, err
-		}
-
-		// Create a list of all nodes
-		allNodes = make([]*Node, len(xmlFormat.Map.ConceptList.Concepts))
-		nodeIdMap := make(map[string]*Node)
-		linkingPhraseIdMap := make(map[string]string)
-
-		// Create a node for each concept
-		for i, concept := range xmlFormat.Map.ConceptList.Concepts {
-			node := &Node{
-				Id:          i,
-				Name:        []byte(concept.Label),
-				Connections: []*Connections{},
-			}
-
-			allNodes[i] = node
-			nodeIdMap[concept.Id] = node
-		}
-
-		// Create a map entry for each linking phrase
-		for _, linkingPhrase := range xmlFormat.Map.LinkingPhraseList.LinkingPhrases {
-			linkingPhraseIdMap[linkingPhrase.Id] = linkingPhrase.Label
-		}
-
-		// <connection> elements denote both connections and linking phrases
-		connCollapsed := []*xmlConnectionCollapsed{}
-		linkingPhraseParentMap := make(map[string][]string)
-		for _, connection := range xmlFormat.Map.ConnectionList.Connections {
-			if _, ok := linkingPhraseIdMap[connection.To]; ok {
-				linkingPhraseParentMap[connection.To] = append(linkingPhraseParentMap[connection.To], connection.From)
-			}
-		}
-
-		for _, connection := range xmlFormat.Map.ConnectionList.Connections {
-			if _, ok := linkingPhraseParentMap[connection.From]; ok {
-				for _, parent := range linkingPhraseParentMap[connection.From] {
-					connCol := &xmlConnectionCollapsed{}
-					connCol.From = parent
-					connCol.To = connection.To
-					connCol.Label = []byte(html.UnescapeString(linkingPhraseIdMap[connection.From]))
-					connCollapsed = append(connCollapsed, connCol)
-				}
-			}
-		}
-
-		// Create a connection for each connection
-		for i, connCol := range connCollapsed {
-			conn := &Connections{
-				Id:   i,
-				Name: connCol.Label,
-				From: nodeIdMap[connCol.From],
-				To:   nodeIdMap[connCol.To],
-			}
-
-			// Add the connection to the current node and the parent node
-			conn.From.Connections = append(conn.From.Connections, conn)
-			conn.To.Connections = append(conn.To.Connections, conn)
-		}
-
+		allNodes, err = parseXML(input.File)
 	} else {
 		return nil, errors.New("invalid format")
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	// Calculate the number of nodes and connections
@@ -275,12 +134,16 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 		}
 
 		if startsChain {
-			nodePath := traverse([]*Node{node})
+			nodePath, ends := traverse([]*Node{node})
 			if len(nodePath) > len(longestPath) {
 				longestPath = nodePath
 			}
+			log.Println("Ends: ", ends)
 		}
 	}
+
+	// Select the dominator node
+	// dominator := longestPath[0]
 
 	// Format the longest path as a string list
 	longestPathFormatted := []string{}
@@ -305,27 +168,4 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 	}
 
 	return output, nil
-}
-
-// Recursive descent to find longest path
-func traverse(path []*Node) []*Node {
-	// Get the last node in the path
-	node := path[len(path)-1]
-
-	// Find all possible paths from the current node
-	options := [][]*Node{}
-	for _, conn := range node.Connections {
-		if conn.From == node {
-			options = append(options, traverse(append(path, conn.To)))
-		}
-	}
-
-	// Find the longest path option
-	for _, option := range options {
-		if len(option) > len(path) {
-			path = option
-		}
-	}
-
-	return path
 }
