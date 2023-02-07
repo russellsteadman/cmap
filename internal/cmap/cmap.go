@@ -2,6 +2,7 @@ package cmap
 
 import (
 	"errors"
+	"log"
 )
 
 // Node is a node in the cmap
@@ -86,6 +87,24 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 			break
 		}
 	}
+
+	// Find the number of end nodes
+	endNodes := 0
+	for _, node := range allNodes {
+		endsChain := true
+
+		for _, conn := range node.Connections {
+			if conn.From.Id == node.Id {
+				endsChain = false
+				break
+			}
+		}
+
+		if endsChain {
+			endNodes++
+		}
+	}
+	log.Println("End nodes", endNodes)
 
 	// Select the dominator node
 	// dominator := longestPath[0]
