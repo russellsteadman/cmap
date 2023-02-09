@@ -12,10 +12,8 @@ import (
 	"github.com/russellsteadman/cmap/internal/cmap"
 )
 
-const version = "v0.2.0"
-
 func printHelp() {
-	fmt.Printf("Usage: cmap %s\n", version)
+	fmt.Printf("Usage: cmap %s\n", cmap.ToolVersion)
 	fmt.Print("cmap is a tool for grading concept maps from a Cmap Outline file.\n\n")
 
 	fmt.Println("Options:")
@@ -44,7 +42,7 @@ func main() {
 			printHelp()
 			return
 		} else if arg == "-v" || arg == "--version" {
-			fmt.Printf("cmap version %s\n", version)
+			fmt.Printf("cmap version %s\n", cmap.ToolVersion)
 			return
 		} else if arg == "-i" || arg == "--input" {
 			if i+1 < len(args) {
@@ -89,8 +87,11 @@ func main() {
 		return
 	}
 
-	fmt.Print("Nodes: " + fmt.Sprint(cmapOutput.Nodes) + "\n")
-	fmt.Print("Connections: " + fmt.Sprint(cmapOutput.Connections) + "\n")
-	fmt.Print("Highest Hierarchy Length: " + fmt.Sprint(cmapOutput.LongestPathLength) + "\n")
+	fmt.Print("NC: " + fmt.Sprint(cmapOutput.NC) + "\n")
+	fmt.Print("NL: " + fmt.Sprint(cmapOutput.NL) + "\n")
+	fmt.Print("NUP: " + fmt.Sprint(cmapOutput.NUP) + "\n")
+	fmt.Print("HH: " + fmt.Sprint(cmapOutput.HH) + "\n")
+	fmt.Print("NCT: " + fmt.Sprint(cmapOutput.NCT) + "\n")
+
 	fmt.Print("Highest Hierarchy: \n\n" + strings.Join(cmapOutput.LongestPath, " > ") + "\n\n")
 }

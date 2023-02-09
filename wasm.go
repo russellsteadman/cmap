@@ -12,9 +12,10 @@ import (
 
 func sendData(data interface{}) string {
 	jsonText, err := json.Marshal(struct {
-		Error bool        `json:"error"`
-		Data  interface{} `json:"data"`
-	}{false, data})
+		Error   bool        `json:"error"`
+		Version string      `json:"version"`
+		Data    interface{} `json:"data"`
+	}{false, cmap.ToolVersion, data})
 	if err != nil {
 		return sendError(err.Error())
 	}
@@ -24,10 +25,11 @@ func sendData(data interface{}) string {
 func sendError(text string) string {
 	jsonText, err := json.Marshal(struct {
 		Error   bool   `json:"error"`
+		Version string `json:"version"`
 		Message string `json:"message"`
-	}{true, text})
+	}{true, cmap.ToolVersion, text})
 	if err != nil {
-		return "{\"error\":true,\"message\":\"Unable to encode error\"}"
+		return "{\"error\":true,\"version\":\"" + cmap.ToolVersion + "\",\"message\":\"Unable to encode error\"}"
 	}
 	return string(jsonText)
 }
