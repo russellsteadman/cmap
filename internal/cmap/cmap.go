@@ -2,7 +2,6 @@ package cmap
 
 import (
 	"errors"
-	"log"
 )
 
 var ToolVersion = "0.2.0"
@@ -91,22 +90,21 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 	}
 
 	// Find the number of end nodes
-	endNodes := 0
-	for _, node := range allNodes {
-		endsChain := true
+	// endNodes := 0
+	// for _, node := range allNodes {
+	// 	endsChain := true
 
-		for _, conn := range node.Connections {
-			if conn.From.Id == node.Id {
-				endsChain = false
-				break
-			}
-		}
+	// 	for _, conn := range node.Connections {
+	// 		if conn.From.Id == node.Id {
+	// 			endsChain = false
+	// 			break
+	// 		}
+	// 	}
 
-		if endsChain {
-			endNodes++
-		}
-	}
-	log.Println("End nodes", endNodes)
+	// 	if endsChain {
+	// 		endNodes++
+	// 	}
+	// }
 
 	// Select the dominator node
 	// dominator := longestPath[0]
