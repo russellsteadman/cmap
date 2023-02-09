@@ -31,7 +31,7 @@ type CmapOutput struct {
 	NC          int      `json:"nc"`          // Number of concepts
 	NL          int      `json:"nl"`          // Number of links
 	HH          int      `json:"hh"`          // Highest hierarchy
-	NH          int      `json:"nh"`          // Number of hierarchies
+	NUP         int      `json:"nup"`         // Number of hierarchies (unique paths)
 	NCT         int      `json:"nct"`         // Number of cross-links (total inter and intra)
 	LongestPath []string `json:"longestPath"` // Highest hierarchy path
 }
@@ -128,7 +128,7 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 		NC:          nodeCount,
 		NL:          connCount,
 		HH:          len(longestPath),
-		NH:          numberOfHierarchies,
+		NUP:         numberOfHierarchies,
 		NCT:         connCount - (nodeCount - 1),
 		LongestPath: longestPathFormatted,
 	}
