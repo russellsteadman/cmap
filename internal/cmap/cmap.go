@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+var ToolVersion = "0.2.0"
+
 // Node is a node in the cmap
 type Node struct {
 	Id          int

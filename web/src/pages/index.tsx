@@ -4,8 +4,9 @@ import { FormEventHandler, useRef, useState } from "react";
 type CmapOutput = {
   nc: number;
   nl: number;
-  nh: number;
   hh: number;
+  nup: number;
+  nct: number;
   longestPath: string[];
 };
 
