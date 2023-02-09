@@ -11,6 +11,19 @@ func traverse(path []*Node) ([]*Node, int) {
 	endsCount := 0
 	for _, conn := range node.Connections {
 		if conn.From == node {
+			isAlreadyInPath := false
+			for _, nodeInPath := range path {
+				if nodeInPath == conn.To {
+					isAlreadyInPath = true
+					break
+				}
+			}
+
+			if isAlreadyInPath {
+				// TODO: Should this be counted as an end node?
+				continue
+			}
+
 			isEndNode = false
 			pathOption, endsVisited := traverse(append(path, conn.To))
 			endsCount += endsVisited

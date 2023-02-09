@@ -48,6 +48,12 @@ Options:
   -f, --format                  The format of the input file (txt, xml)
 ```
 
+## Testing
+
+```sh
+go test ./...
+```
+
 ## License
 
 Copyright 2023 The Ohio State University. Released under an MIT License, see the `LICENSE` file for details.

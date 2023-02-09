@@ -1,6 +1,7 @@
 package cmap
 
 import (
+	"bytes"
 	"encoding/xml"
 	"html"
 )
@@ -104,7 +105,7 @@ func parseXML(fileText []byte) (nodeList []*Node, err error) {
 				connCol := &xmlConnectionCollapsed{}
 				connCol.From = parent
 				connCol.To = connection.To
-				connCol.Label = []byte(html.UnescapeString(linkingPhraseIdMap[connection.From]))
+				connCol.Label = bytes.ReplaceAll([]byte(html.UnescapeString(linkingPhraseIdMap[connection.From])), []byte("\n"), []byte(" "))
 				connCollapsed = append(connCollapsed, connCol)
 			}
 		}
