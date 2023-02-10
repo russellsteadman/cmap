@@ -1,5 +1,23 @@
+import initializeGo from "@/shared/goInit";
 import Head from "next/head";
-import { FormEventHandler, useRef, useState } from "react";
+import { FormEventHandler, useEffect, useRef, useState } from "react";
+import {
+  Container,
+  Button,
+  TextField,
+  Paper,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Alert,
+  AlertTitle,
+  Typography,
+} from "@mui/material";
+import GradingIcon from "@mui/icons-material/Grading";
+import WorkspacesIcon from "@mui/icons-material/Workspaces";
+import LandscapeIcon from "@mui/icons-material/Landscape";
+import CalculateIcon from "@mui/icons-material/Calculate";
 
 type CmapOutput = {
   nc: number;
@@ -15,6 +33,7 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const [out, setOut] = useState<CmapOutput | undefined>();
+  const [loading, setLoading] = useState(true);
 
   const execute = (input: { file: string; format?: number }) => {
     const rawInput = JSON.stringify(input);
@@ -78,6 +97,18 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    let attached = true;
+
+    initializeGo().then(() => {
+      if (attached) setLoading(false);
+    });
+
+    return () => {
+      attached = false;
+    };
+  }, []);
+
   return (
     <>
       <Head>
@@ -85,143 +116,171 @@ export default function Home() {
         <meta name="description" content="Concept map grading tool" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <main className="container py-3">
-        <h1>Concept Map Grader</h1>
+      <main>
+        <Container sx={{ py: 3 }}>
+          <h1>Concept Map Grader</h1>
 
-        <p>
-          You can use either the CmapTools desktop app or the CmapCloud web app
-          to check your score. For desktop app users, select{" "}
-          <b>Export &gt; Cmap Outline</b>. For web app users, select{" "}
-          <b>Export to CXL</b> on the left-hand side. Alternatively, web app
-          users can click <b>Open in Cmap Viewer</b> and provide the url without
-          downloading anything.
-        </p>
+          <p>
+            You can use either the CmapTools desktop app or the CmapCloud web
+            app to check your score. For desktop app users, select{" "}
+            <b>Export &gt; Cmap Outline</b>. For web app users, select{" "}
+            <b>Export to CXL</b> on the left-hand side. Alternatively, web app
+            users can click <b>Open in Cmap Viewer</b> and provide the url
+            without downloading anything.
+          </p>
 
-        <form onSubmit={onSubmit}>
-          <label htmlFor="file">
-            <code>.cxl</code> file or Concept Map Outline <code>.txt</code> file
-          </label>
-          <input
-            type="file"
-            accept=".txt,.cxl,.xml"
-            className="form-control mb-3"
-            ref={fileInput}
-            id="file"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setUrl("");
-              }
-            }}
-          />
+          <Paper sx={{ py: 2, mb: 2 }}>
+            <Container>
+              <form onSubmit={onSubmit}>
+                <label htmlFor="file"></label>
+                <TextField
+                  type="file"
+                  fullWidth
+                  inputProps={{
+                    accept: ".txt,.cxl,.xml",
+                  }}
+                  inputRef={fileInput}
+                  id="file"
+                  onChange={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.files && target.files[0]) {
+                      setUrl("");
+                    }
+                  }}
+                  sx={{ my: 2 }}
+                  label={
+                    <>
+                      <code>.cxl</code> file or Concept Map Outline{" "}
+                      <code>.txt</code> file
+                    </>
+                  }
+                  InputLabelProps={{ shrink: true }}
+                />
 
-          <label htmlFor="url">CmapCloud Concept Map URL</label>
-          <input
-            type="url"
-            className="form-control mb-3"
-            value={url}
-            placeholder="https://cmapscloud.ihmc.us/..."
-            id="url"
-            onChange={(e) => {
-              setUrl(e.target.value);
-              if (fileInput.current) fileInput.current.value = "";
-            }}
-          />
+                <TextField
+                  type="url"
+                  value={url}
+                  placeholder="https://cmapscloud.ihmc.us/..."
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    if (fileInput.current) fileInput.current.value = "";
+                  }}
+                  fullWidth
+                  label="CmapCloud Concept Map URL"
+                  sx={{ my: 2 }}
+                />
 
-          <button type="submit" className="btn btn-dark">
-            Grade Concept Map
-          </button>
-        </form>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={loading}
+                  startIcon={<GradingIcon />}
+                  sx={{ mt: 2 }}
+                >
+                  Grade Concept Map
+                </Button>
+              </form>
+            </Container>
+          </Paper>
 
-        {!error && !!out && (
-          <>
-            <hr />
+          {!error && !!out && (
+            <>
+              <hr />
 
-            <h3>Results</h3>
-            <div className="input-group mt-3">
-              <span className="input-group-text">Node Count</span>
-              <input
-                type="text"
-                className="form-control"
-                readOnly
-                value={out.nc}
-              />
-            </div>
+              <h2>Results</h2>
 
-            <div className="input-group mt-3">
-              <span className="input-group-text">Connection Count</span>
-              <input
-                type="text"
-                className="form-control"
-                readOnly
-                value={out.nl}
-              />
-            </div>
+              <Paper sx={{ py: 2, mb: 2 }}>
+                <Container>
+                  <List>
+                    <ListItem>
+                      <ListItemIcon>
+                        <WorkspacesIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={`Number of Concepts (NC): ${out.nc}`}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <LandscapeIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={`Highest Hierarchy (HH): ${out.hh}`}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <CalculateIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={`NC + 5(HH): ${out.nc + 5 * out.hh}`}
+                      />
+                    </ListItem>
+                  </List>
 
-            <div className="input-group mt-3">
-              <span className="input-group-text">Highest Hierarchy Length</span>
-              <input
-                type="text"
-                className="form-control"
-                readOnly
-                value={out.hh}
-              />
-            </div>
+                  <TextField
+                    label="Highest Hierarchy"
+                    multiline
+                    inputProps={{ readOnly: true }}
+                    fullWidth
+                    sx={{ my: 2 }}
+                    minRows={4}
+                    value={out.longestPath.reduce((a, b, c, d) => {
+                      if (c === 0) return b;
 
-            <h4 className="mt-3">Highest Hierarchy</h4>
-            <textarea
-              className="form-control"
-              readOnly
-              style={{ minHeight: 200 }}
-              value={out.longestPath.reduce((a, b, c, d) => {
-                if (c === 0) return b;
+                      if (c % 2 === 1) {
+                        return a + "\n\t(" + b + ")";
+                      }
 
-                if (c % 2 === 1) {
-                  return a + "\n\t(" + b + ")";
-                }
+                      return a + " " + b;
+                    }, "")}
+                  />
+                </Container>
+              </Paper>
+            </>
+          )}
 
-                return a + " " + b;
-              }, "")}
-            ></textarea>
-          </>
-        )}
+          {error && (
+            <Alert severity="error">
+              <AlertTitle>Error</AlertTitle>
+              {error}
+            </Alert>
+          )}
 
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        )}
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <b>Privacy Notice:</b> This tool collects anonymous data including:
+            telemetry, usage analytics, concept map summary statistics, and, if
+            voluntarily allowed, concept map data. This data is used to improve
+            the tool, drive research, and to provide a better user experience.
+            This tool does not intentionally collect any personally identifiable
+            information.
+          </Typography>
 
-        <p className="text-muted small mt-3">
-          Privacy Notice: Your concept map information does <b>not</b> leave
-          your device. Clicking <i>Grade Concept Map</i> will not submit your
-          concept map for grading. If you use the CmapCloud URL option, the
-          concept map is downloaded to your device and then graded.
-        </p>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            Please submit{" "}
+            <a
+              href="https://github.com/russellsteadman/cmap/issues/new"
+              target="_blank"
+              rel="noreferrer"
+            >
+              bugs and accessibility issues
+            </a>{" "}
+            if you find any. This requires a GitHub account, which is free and
+            easy to set up.
+          </Typography>
 
-        <p className="text-muted small mt-3">
-          Please submit{" "}
-          <a
-            href="https://github.com/russellsteadman/cmap/issues/new"
-            target="_blank"
-            rel="noreferrer"
-          >
-            bugs and accessibility issues
-          </a>{" "}
-          if you find any. This requires a GitHub account, which is free and
-          easy to set up.
-        </p>
-
-        <p className="text-muted small">
-          Copyright &copy; 2023 The Ohio State University. See{" "}
-          <a
-            href="https://github.com/russellsteadman/cmap/blob/main/LICENSE"
-            target="_blank"
-            rel="noreferrer"
-          >
-            LICENSE
-          </a>{" "}
-          file.
-        </p>
+          <Typography variant="body2">
+            Copyright &copy; 2023 The Ohio State University. See{" "}
+            <a
+              href="https://github.com/russellsteadman/cmap/blob/main/LICENSE"
+              target="_blank"
+              rel="noreferrer"
+            >
+              LICENSE
+            </a>{" "}
+            file.
+          </Typography>
+        </Container>
       </main>
     </>
   );
