@@ -13,11 +13,16 @@ import {
   Alert,
   AlertTitle,
   Typography,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import GradingIcon from "@mui/icons-material/Grading";
 import WorkspacesIcon from "@mui/icons-material/Workspaces";
 import LandscapeIcon from "@mui/icons-material/Landscape";
 import CalculateIcon from "@mui/icons-material/Calculate";
+import localforage from "localforage";
+import collectSample from "@/shared/collectSamples";
+import { logSummaryStats, logUserEvent } from "@/shared/events";
 
 type CmapOutput = {
   nc: number;
@@ -34,22 +39,51 @@ export default function Home() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [out, setOut] = useState<CmapOutput | undefined>();
   const [loading, setLoading] = useState(true);
+  const [dataConsent, setDataConsent] = useState(true);
+
+  useEffect(() => {
+    localforage.getItem("consent").then((consent) => {
+      if (consent === "deny") setDataConsent(false);
+    });
+  }, []);
+
+  const toggleDataConsent = async () => {
+    const storedDeny = (await localforage.getItem("consent")) === "deny";
+    if (storedDeny) {
+      await localforage.setItem("consent", "allow");
+      setDataConsent(true);
+      logUserEvent("consent_accept");
+    } else {
+      await localforage.setItem("consent", "deny");
+      setDataConsent(false);
+      logUserEvent("consent_reject");
+    }
+  };
 
   const execute = (input: { file: string; format?: number }) => {
+    collectSample(input.file, input.format === 1 ? "xml" : "txt");
+
     const rawInput = JSON.stringify(input);
     const cmapRaw = (window as unknown as any).gradecmap(rawInput);
 
     const cmap = JSON.parse(cmapRaw);
     if (cmap.error) {
       setError(cmap.message);
+
+      logUserEvent("grade_failure", cmap.message);
     } else {
       setError("");
       setOut(cmap.data);
+
+      logUserEvent("grade_success");
+      logSummaryStats(cmap.data.nc, cmap.data.hh);
     }
   };
 
   const onSubmit: FormEventHandler<HTMLFormElement> = (ev) => {
     ev.preventDefault();
+
+    logUserEvent("grade_click");
 
     const file = fileInput.current?.files && fileInput.current?.files[0];
 
@@ -91,7 +125,8 @@ export default function Home() {
           };
           reader.readAsDataURL(blob);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error(err);
           setError("Failed to get information from the URL.");
         });
     }
@@ -213,7 +248,12 @@ export default function Home() {
                         <CalculateIcon />
                       </ListItemIcon>
                       <ListItemText
-                        primary={`NC + 5(HH): ${out.nc + 5 * out.hh}`}
+                        primary={
+                          <>
+                            Simple Score (NC + 5 &times; HH):{" "}
+                            {out.nc + 5 * out.hh}
+                          </>
+                        }
                       />
                     </ListItem>
                   </List>
@@ -248,6 +288,13 @@ export default function Home() {
           )}
 
           <Typography variant="body2" sx={{ mb: 1 }}>
+            <b>Limitations of Testing:</b> This tool is intended to work for
+            human-generated concept maps, where the number of concepts is less
+            than 1,000. Excessively large (&gt; 1,000 node) concept maps may
+            cause the tool to run slowly or crash.
+          </Typography>
+
+          <Typography variant="body2" sx={{ mb: 1 }}>
             <b>Privacy Notice:</b> This tool collects anonymous data including:
             telemetry, usage analytics, concept map summary statistics, and, if
             voluntarily allowed, concept map data. This data is used to improve
@@ -255,6 +302,21 @@ export default function Home() {
             This tool does not intentionally collect any personally identifiable
             information.
           </Typography>
+
+          <Typography variant="body2">
+            <b>Consent for Data Collection:</b> By using this tool, you
+            voluntarily consent to the collection of data as described above.
+            You can opt-out of data collection of concept maps by unchecking the
+            box below. This will not affect your ability to use the tool.
+          </Typography>
+
+          <FormControlLabel
+            control={
+              <Checkbox checked={dataConsent} onChange={toggleDataConsent} />
+            }
+            label="I consent to donating my concept maps."
+            componentsProps={{ typography: { variant: "body2" } }}
+          />
 
           <Typography variant="body2" sx={{ mb: 1 }}>
             Please submit{" "}
