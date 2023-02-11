@@ -15,6 +15,8 @@ import {
   Typography,
   FormControlLabel,
   Checkbox,
+  AppBar,
+  Toolbar,
 } from "@mui/material";
 import GradingIcon from "@mui/icons-material/Grading";
 import WorkspacesIcon from "@mui/icons-material/Workspaces";
@@ -152,9 +154,16 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main>
+        <AppBar position="static">
+          <Toolbar>
+            <Container>
+              <Typography variant="h6" component="h1">
+                Concept Map Grader
+              </Typography>
+            </Container>
+          </Toolbar>
+        </AppBar>
         <Container sx={{ py: 3 }}>
-          <h1>Concept Map Grader</h1>
-
           <p>
             You can use either the CmapTools desktop app or the CmapCloud web
             app to check your score. For desktop app users, select{" "}

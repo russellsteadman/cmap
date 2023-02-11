@@ -2,8 +2,9 @@ import type { AppProps } from "next/app";
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 import "@/styles/global.scss";
-import { CssBaseline } from "@mui/material";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import Head from "next/head";
+import theme from "@/shared/theme";
 
 try {
   Sentry.init({
@@ -21,7 +22,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </Head>
-      <Component {...pageProps} />
+      <ThemeProvider theme={theme}>
+        <Component {...pageProps} />
+      </ThemeProvider>
       <CssBaseline />
     </>
   );
