@@ -1,18 +1,6 @@
-import { createTheme } from "@mui/material";
+// This file is used to define the theme of the application
 
-// declare module "@mui/material/styles" {
-//   interface Theme {
-//     status: {
-//       danger: string;
-//     };
-//   }
-//   // allow configuration using `createTheme`
-//   interface ThemeOptions {
-//     status?: {
-//       danger?: string;
-//     };
-//   }
-// }
+import { createTheme } from "@mui/material";
 
 const theme = createTheme({
   palette: {

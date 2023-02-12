@@ -23,7 +23,7 @@ type Connections struct {
 
 // CmapInput is the input of the GradeMap function
 type CmapInput struct {
-	File   []byte `json:"file"`
+	File   []byte `json:"file"`   // File contents; []byte is a base64 encoded string when in json format
 	Format int    `json:"format"` // 0 = TXT, 1 = XML
 }
 

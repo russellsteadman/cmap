@@ -43,12 +43,14 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [dataConsent, setDataConsent] = useState(true);
 
+  // Check for consent from local storage
   useEffect(() => {
     localforage.getItem("consent").then((consent) => {
       if (consent === "deny") setDataConsent(false);
     });
   }, []);
 
+  // Toggle the consent status
   const toggleDataConsent = async () => {
     const storedDeny = (await localforage.getItem("consent")) === "deny";
     if (storedDeny) {
@@ -62,12 +64,16 @@ export default function Home() {
     }
   };
 
+  // Run the grading tool
   const execute = (input: { file: string; format?: number }) => {
+    // Collect sample data
     collectSample(input.file, input.format === 1 ? "xml" : "txt");
 
+    // Run the grading tool
     const rawInput = JSON.stringify(input);
     const cmapRaw = (window as unknown as any).gradecmap(rawInput);
 
+    // Parse the output
     const cmap = JSON.parse(cmapRaw);
     if (cmap.error) {
       setError(cmap.message);
@@ -82,11 +88,14 @@ export default function Home() {
     }
   };
 
+  // Handle form submission
   const onSubmit: FormEventHandler<HTMLFormElement> = (ev) => {
+    // Prevent the form from submitting
     ev.preventDefault();
 
     logUserEvent("grade_click");
 
+    // Get the file or URL
     const file = fileInput.current?.files && fileInput.current?.files[0];
 
     if (!file && !url) return setError("Please select a file or enter a URL.");
@@ -98,31 +107,39 @@ export default function Home() {
     }
 
     if (file) {
+      // Read the file
       const reader = new FileReader();
       reader.onload = () => {
+        // Get the file data as a base64 string
         const fileData =
           (reader.result as string | null)?.split(",").pop() ?? "";
         const extension = file.name.split(".").pop();
 
+        // Run the grading tool
         execute({ file: fileData, format: extension === "txt" ? 0 : 1 });
       };
       reader.readAsDataURL(file);
     } else {
+      // Get the CMAP ID from the URL
       const urlIdRegex = /([0-9A-Z]+\-[0-9A-Z]+\-[0-9A-Z]+)/;
       const urlMatch = url.match(urlIdRegex);
 
       if (!urlMatch) return setError("Please enter a CMAP link.");
 
+      // Get the CMAP .cxl file from CmapCloud
       fetch(
         `https://cmapscloud.ihmc.us/resources/id=${urlMatch[0]}?cmd=get.cmap.v3`
       )
         .then((res) => res.arrayBuffer())
         .then((data) => {
+          // Convert the file to a base64 string
           const blob = new Blob([data], { type: "application/octet-binary" });
           const reader = new FileReader();
           reader.onload = function (evt) {
             const fileData =
               (reader.result as string | null)?.split(",").pop() ?? "";
+
+            // Run the grading tool
             execute({ file: fileData, format: 1 });
           };
           reader.readAsDataURL(blob);
@@ -134,6 +151,7 @@ export default function Home() {
     }
   };
 
+  // Initialize the Go wasm module
   useEffect(() => {
     let attached = true;
 
