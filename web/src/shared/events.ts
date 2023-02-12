@@ -1,3 +1,5 @@
+// This file contains functions for logging events to Google Analytics
+
 export const logUserEvent = (
   type:
     | "grade_click"

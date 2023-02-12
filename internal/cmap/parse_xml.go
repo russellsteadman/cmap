@@ -91,7 +91,6 @@ func parseXML(fileText []byte) (nodeList []*Node, err error) {
 	}
 
 	// <connection> elements denote both connections and linking phrases
-	connCollapsed := []*xmlConnectionCollapsed{}
 	linkingPhraseParentMap := make(map[string][]string)
 	for _, connection := range xmlFormat.Map.ConnectionList.Connections {
 		if _, ok := linkingPhraseIdMap[connection.To]; ok {
@@ -99,6 +98,8 @@ func parseXML(fileText []byte) (nodeList []*Node, err error) {
 		}
 	}
 
+	// Collapse the linking phrases so that the connections are node to node
+	connCollapsed := []*xmlConnectionCollapsed{}
 	for _, connection := range xmlFormat.Map.ConnectionList.Connections {
 		if _, ok := linkingPhraseParentMap[connection.From]; ok {
 			for _, parent := range linkingPhraseParentMap[connection.From] {

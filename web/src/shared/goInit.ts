@@ -1,3 +1,4 @@
+// This file is used to initialize the Go runtime and load the wasm file
 const initializeGo = async () => {
   const go = new Go();
   const result = await WebAssembly.instantiateStreaming(
