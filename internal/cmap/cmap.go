@@ -2,6 +2,7 @@ package cmap
 
 import (
 	"errors"
+	"strings"
 )
 
 var ToolVersion = "0.2.0"
@@ -74,6 +75,7 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 
 	// Find number of start nodes
 	startCount := 0
+	startNodeNames := []string{}
 	for _, node := range allNodes {
 		startsChain := true
 
@@ -86,12 +88,13 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 
 		if startsChain {
 			startCount += 1
+			startNodeNames = append(startNodeNames, string(node.Name))
 		}
 	}
 
 	// Fail if there are multiple or no start nodes
 	if startCount > 1 {
-		return nil, errors.New("multiple start nodes")
+		return nil, errors.New("multiple start nodes: " + strings.Join(startNodeNames, ", "))
 	} else if startCount == 0 {
 		return nil, errors.New("no start nodes")
 	}

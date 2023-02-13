@@ -76,9 +76,10 @@ export default function Home() {
     // Parse the output
     const cmap = JSON.parse(cmapRaw);
     if (cmap.error) {
-      if (cmap.message === "multiple start nodes") {
+      if (cmap.message.split(":")[0] === "multiple start nodes") {
         return setError(
-          "All concepts except for the main concept should have other concepts linking TO them (e.g. OTHER CONCEPT ➔ CONCEPT). To fix this issue, make sure that all concepts except for the main concept have other concepts linking TO them (e.g. OTHER CONCEPT ➔ CONCEPT)."
+          "All concepts except for the main concept should have other concepts linking TO them (e.g. OTHER CONCEPT ➔ CONCEPT). To fix this issue, make sure that all concepts EXCEPT for the main concept have other concepts linking TO them (e.g. OTHER CONCEPT ➔ CONCEPT). Nodes without TO links include: " +
+            cmap.message.split(": ").pop()
         );
       } else if (cmap.message === "no start nodes") {
         return setError(
