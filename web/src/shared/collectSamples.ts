@@ -29,7 +29,10 @@ const collectSample = async (
 
   // Replace the res-meta with a PII redacted version
   let body = decode(base64Sample);
-  body = body.replace(/\<res-meta\>(.|\n)*\<\/res-meta\>/gim, resMetaRedacted);
+  body = body.replace(
+    /\<res-meta\>(.|\r\n|\n)*\<\/res-meta\>/gim,
+    resMetaRedacted
+  );
 
   // Send the sample to S3
   await fetch(type === "txt" ? txt : xml, {
