@@ -76,7 +76,17 @@ export default function Home() {
     // Parse the output
     const cmap = JSON.parse(cmapRaw);
     if (cmap.error) {
-      setError(cmap.message);
+      if (cmap.message === "multiple start nodes") {
+        return setError(
+          "The concept map has multiple concepts which don't have other concepts linking TO them. Only the main concept should not have concepts linking TO it."
+        );
+      } else if (cmap.message === "no start nodes") {
+        return setError(
+          "The central concept should not have other concepts linking TO it. It should only have concepts linking FROM it."
+        );
+      } else {
+        setError(cmap.message);
+      }
 
       logUserEvent("grade_failure", cmap.message);
     } else {
@@ -308,7 +318,7 @@ export default function Home() {
           )}
 
           {error && (
-            <Alert severity="error">
+            <Alert severity="error" sx={{ my: 3 }}>
               <AlertTitle>Error</AlertTitle>
               {error}
             </Alert>

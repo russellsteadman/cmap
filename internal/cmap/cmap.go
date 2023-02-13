@@ -72,6 +72,30 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 	longestPath := []*Node{}
 	numberOfHierarchies := 0
 
+	// Find number of start nodes
+	startCount := 0
+	for _, node := range allNodes {
+		startsChain := true
+
+		for _, conn := range node.Connections {
+			if conn.To.Id == node.Id {
+				startsChain = false
+				break
+			}
+		}
+
+		if startsChain {
+			startCount += 1
+		}
+	}
+
+	// Fail if there are multiple or no start nodes
+	if startCount > 1 {
+		return nil, errors.New("multiple start nodes")
+	} else if startCount == 0 {
+		return nil, errors.New("no start nodes")
+	}
+
 	// Find all nodes that start a chain and traverse them
 	for _, node := range allNodes {
 		startsChain := true
