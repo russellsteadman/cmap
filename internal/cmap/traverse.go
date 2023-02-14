@@ -6,15 +6,15 @@ func traverse(path []*Node) ([]*Node, int) {
 	node := path[len(path)-1]
 
 	// Find all possible paths from the current node
-	options := [][]*Node{}
 	isEndNode := true
 	endsCount := 0
+	nextPath := append([]*Node{}, path...)
 	for _, conn := range node.Connections {
-		if conn.From == node {
+		if conn.From.Id == node.Id {
 			// Check if the node is already in the path to avoid loops
 			isAlreadyInPath := false
 			for _, nodeInPath := range path {
-				if nodeInPath == conn.To {
+				if nodeInPath.Id == conn.To.Id {
 					isAlreadyInPath = true
 					break
 				}
@@ -28,16 +28,11 @@ func traverse(path []*Node) ([]*Node, int) {
 
 			// If the node is not already in the path, add it to the path and continue
 			isEndNode = false
-			pathOption, endsVisited := traverse(append(path, conn.To))
+			option, endsVisited := traverse(append(path, conn.To))
 			endsCount += endsVisited
-			options = append(options, pathOption)
-		}
-	}
-
-	// Find the longest path option
-	for _, option := range options {
-		if len(option) > len(path) {
-			path = option
+			if len(option) > len(nextPath) {
+				nextPath = option
+			}
 		}
 	}
 
@@ -47,5 +42,5 @@ func traverse(path []*Node) ([]*Node, int) {
 	}
 
 	// Return the longest path and the end node count
-	return path, endsCount
+	return nextPath, endsCount
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-var ToolVersion = "0.2.0"
+var ToolVersion = "0.2.1"
 
 // Node is a node in the cmap
 type Node struct {

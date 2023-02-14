@@ -25,6 +25,7 @@ import CalculateIcon from "@mui/icons-material/Calculate";
 import localforage from "localforage";
 import collectSample from "@/shared/collectSamples";
 import { logSummaryStats, logUserEvent } from "@/shared/events";
+import { captureException } from "@sentry/react";
 
 type CmapOutput = {
   nc: number;
@@ -77,22 +78,27 @@ export default function Home() {
     const cmap = JSON.parse(cmapRaw);
     if (cmap.error) {
       if (cmap.message.split(":")[0] === "multiple start nodes") {
+        logUserEvent("grade_failure", "multiple start nodes");
+
         return setError(
-          "All concepts except for the main concept should have other concepts linking TO them (e.g. OTHER CONCEPT ➔ CONCEPT). To fix this issue, make sure that all concepts EXCEPT for the main concept have other concepts linking TO them (e.g. OTHER CONCEPT ➔ CONCEPT). Nodes without TO links include: " +
+          "Make sure that all concepts EXCEPT for the main concept have other concepts linking TOWARDS them (e.g. OTHER CONCEPT ➔ CONCEPT). Nodes without TO links include: " +
             cmap.message.split(": ").pop()
         );
       } else if (cmap.message === "no start nodes") {
+        logUserEvent("grade_failure", cmap.message);
+
         return setError(
-          "The central concept should not have other concepts linking TO it. To fix this issue, remove the link TO the main concept (e.g. OTHER CONCEPT ➔ MAIN CONCEPT)."
+          "The central concept should not have other concepts linking TOWARDS it. To fix this issue, remove the link TOWARDS the main concept (e.g. OTHER CONCEPT ➔ MAIN CONCEPT)."
         );
       } else {
         setError(cmap.message);
-      }
 
-      logUserEvent("grade_failure", cmap.message);
+        logUserEvent("grade_failure", cmap.message);
+      }
     } else {
       setError("");
       setOut(cmap.data);
+      console.log(cmap.data);
 
       logUserEvent("grade_success");
       logSummaryStats(cmap.data.nc, cmap.data.hh);
@@ -126,6 +132,8 @@ export default function Home() {
           (reader.result as string | null)?.split(",").pop() ?? "";
         const extension = file.name.split(".").pop();
 
+        logUserEvent(extension === "txt" ? "file_text" : "file_xml");
+
         // Run the grading tool
         execute({ file: fileData, format: extension === "txt" ? 0 : 1 });
       };
@@ -143,6 +151,8 @@ export default function Home() {
       )
         .then((res) => res.arrayBuffer())
         .then((data) => {
+          logUserEvent("fetch_link");
+
           // Convert the file to a base64 string
           const blob = new Blob([data], { type: "application/octet-binary" });
           const reader = new FileReader();
@@ -156,7 +166,9 @@ export default function Home() {
           reader.readAsDataURL(blob);
         })
         .catch((err) => {
+          captureException(err);
           console.error(err);
+
           setError("Failed to get information from the URL.");
         });
     }

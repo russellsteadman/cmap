@@ -6,7 +6,7 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <Script
-          src="https://cdn.jsdelivr.net/gh/golang/go@go1.19.5/misc/wasm/wasm_exec.min.js"
+          src="https://cdn.jsdelivr.net/gh/golang/go@go1.20/misc/wasm/wasm_exec.min.js"
           strategy="beforeInteractive"
         />
         <Script

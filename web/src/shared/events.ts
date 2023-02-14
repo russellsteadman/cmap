@@ -6,7 +6,10 @@ export const logUserEvent = (
     | "consent_reject"
     | "consent_accept"
     | "grade_success"
-    | "grade_failure",
+    | "grade_failure"
+    | "file_text"
+    | "file_xml"
+    | "fetch_link",
   message?: string
 ) => {
   try {
