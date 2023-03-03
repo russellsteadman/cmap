@@ -33,6 +33,7 @@ type CmapOutput struct {
 	NC          int      `json:"nc"`          // Number of concepts
 	NL          int      `json:"nl"`          // Number of links
 	HH          int      `json:"hh"`          // Highest hierarchy
+	NH          int      `json:"nh"`          // Number of hierarchies
 	NUP         int      `json:"nup"`         // Number of hierarchies (unique paths)
 	NCT         int      `json:"nct"`         // Number of cross-links (total inter and intra)
 	LongestPath []string `json:"longestPath"` // Highest hierarchy path
@@ -71,7 +72,9 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 
 	// Find longest path
 	longestPath := []*Node{}
+	numberOfUniquePaths := 0
 	numberOfHierarchies := 0
+	startNode := &Node{}
 
 	// Find number of start nodes
 	startCount := 0
@@ -89,6 +92,7 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 		if startsChain {
 			startCount += 1
 			startNodeNames = append(startNodeNames, string(node.Name))
+			startNode = node
 		}
 	}
 
@@ -100,21 +104,8 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 	}
 
 	// Find all nodes that start a chain and traverse them
-	for _, node := range allNodes {
-		startsChain := true
-
-		for _, conn := range node.Connections {
-			if conn.To.Id == node.Id {
-				startsChain = false
-				break
-			}
-		}
-
-		if startsChain {
-			longestPath, numberOfHierarchies = traverse([]*Node{node})
-			break
-		}
-	}
+	longestPath, numberOfUniquePaths = traverse([]*Node{startNode})
+	numberOfHierarchies = len(startNode.Connections)
 
 	// Find the number of end nodes
 	// endNodes := 0
@@ -155,7 +146,8 @@ func GradeMap(input *CmapInput) (*CmapOutput, error) {
 		NC:          nodeCount,
 		NL:          connCount,
 		HH:          len(longestPath),
-		NUP:         numberOfHierarchies,
+		NH:          numberOfHierarchies,
+		NUP:         numberOfUniquePaths,
 		NCT:         connCount - (nodeCount - 1),
 		LongestPath: longestPathFormatted,
 	}

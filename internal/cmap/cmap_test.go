@@ -79,8 +79,8 @@ func TestCrossValidation(t *testing.T) {
 		if out.HH != (expected.HH + 1) {
 			t.Error("HH does not match:", out.HH, "!=", expected.HH+1)
 		}
-		if out.NUP != expected.NUP {
-			t.Error("NUP does not match:", out.NUP, "!=", expected.NUP)
+		if out.NH != expected.NH {
+			t.Error("NH does not match:", out.NH, "!=", expected.NH)
 		}
 		if out.NCT != expected.NCT {
 			t.Error("NCT does not match:", out.NCT, "!=", expected.NCT)
