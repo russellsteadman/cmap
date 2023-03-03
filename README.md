@@ -56,4 +56,4 @@ go test ./...
 
 ## License
 
-Copyright 2023 The Ohio State University. Released under an MIT License, see the `LICENSE` file for details.
+Except where otherwise noted, released under an MIT License. See the `LICENSE` file for details.
